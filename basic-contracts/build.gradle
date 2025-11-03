@@ -1,0 +1,20 @@
+plugins {
+    id 'java'
+}
+
+getTasks().withType(JavaCompile.class).configureEach {
+    getOptions().getRelease().set(9)
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation libs.contracts
+    testImplementation libs.contracts.test
+}
+
+test {
+    useJUnitPlatform()
+}

@@ -1,0 +1,15 @@
+[versions]
+contracts-version = "[2.5.0,3.0.0)"
+concurrency-version = "[1.3.0,2.0.0)"
+metalog-version = "[1.0.0,2.0.0)"
+
+[libraries]
+contracts-api = { module = "io.github.jonloucks.contracts:contracts-api", version.ref = "contracts-version" }
+contracts-test = { module = "io.github.jonloucks.contracts:contracts-test", version.ref = "contracts-version" }
+contracts = { module = "io.github.jonloucks.contracts:contracts", version.ref = "contracts-version" }
+concurrency-api = { module = "io.github.jonloucks.concurrency:concurrency-api", version.ref = "concurrency-version" }
+concurrency-test = { module = "io.github.jonloucks.concurrency:concurrency-test", version.ref = "concurrency-version" }
+concurrency = { module = "io.github.jonloucks.concurrency:concurrency", version.ref = "concurrency-version" }
+metalog-api = { module = "io.github.jonloucks.metalog:metalog-api", version.ref = "metalog-version" }
+metalog-test = { module = "io.github.jonloucks.metalog:metalog-test", version.ref = "metalog-version" }
+metalog = { module = "io.github.jonloucks.metalog:metalog", version.ref = "metalog-version" }

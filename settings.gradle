@@ -1,3 +1,4 @@
 rootProject.name = 'examples'
-include 'basic-contracts'
-include 'basic-concurrency'
+include 'common'
+
+include 'server'

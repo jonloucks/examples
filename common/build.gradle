@@ -1,0 +1,30 @@
+plugins {
+    id 'java-library'
+}
+
+getTasks().withType(JavaCompile.class).configureEach {
+    getOptions().getRelease().set(9)
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    api libs.contracts.api
+    api libs.concurrency.api
+    api libs.metalog.api
+
+    implementation libs.contracts
+    implementation libs.concurrency
+    implementation libs.metalog
+
+    testImplementation libs.contracts.test
+    testImplementation libs.concurrency.test
+    testImplementation libs.metalog.test
+}
+
+test {
+    useJUnitPlatform()
+}

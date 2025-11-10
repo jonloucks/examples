@@ -9,8 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/basic-concurrency" />
-            <option value="$PROJECT_DIR$/basic-contracts" />
+            <option value="$PROJECT_DIR$/common" />
+            <option value="$PROJECT_DIR$/server" />
           </set>
         </option>
       </GradleProjectSettings>

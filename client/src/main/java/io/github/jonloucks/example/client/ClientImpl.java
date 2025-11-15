@@ -1,26 +1,26 @@
-package io.github.jonloucks.example.server;
+package io.github.jonloucks.example.client;
 
 import io.github.jonloucks.concurrency.api.Idempotent;
 import io.github.jonloucks.concurrency.api.StateMachine;
 import io.github.jonloucks.concurrency.api.WaitableNotify;
 import io.github.jonloucks.contracts.api.AutoClose;
 import io.github.jonloucks.contracts.api.Repository;
-import io.grpc.Grpc;
-import io.grpc.InsecureServerCredentials;
-import io.grpc.health.v1.HealthCheckResponse;
+import io.github.jonloucks.examples.messages.weather.WeatherGrpc;
+import io.github.jonloucks.examples.messages.weather.WeatherOuterClass.WeatherReply;
+import io.github.jonloucks.examples.messages.weather.WeatherOuterClass.WeatherRequest;
+import io.grpc.*;
 import io.grpc.protobuf.services.HealthStatusManager;
-import io.grpc.protobuf.services.ProtoReflectionServiceV1;
 
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import static io.github.jonloucks.concurrency.api.Idempotent.withClose;
 import static io.github.jonloucks.concurrency.api.Idempotent.withOpen;
 import static io.github.jonloucks.contracts.api.Checks.configCheck;
 import static io.github.jonloucks.contracts.api.Checks.nullCheck;
+import static io.github.jonloucks.metalog.api.GlobalMetalog.publish;
 import static java.util.Optional.ofNullable;
 
-final class ServerImpl implements Server {
+final class ClientImpl implements Client {
     
     @Override
     public AutoClose open() {
@@ -33,16 +33,20 @@ final class ServerImpl implements Server {
     }
     
     @Override
-    public Idempotent getLifeCycleState() {
-        return stateMachine.getState();
-    }
-    
-    @Override
     public String getWeatherReport() {
-        return "";
+        try {
+            final WeatherRequest weatherRequest = WeatherRequest.newBuilder()
+                .addLocation("current")
+                .build();
+            final WeatherReply reply = blockingStub.sayWeather(weatherRequest);
+            return reply.getReport();
+        } catch (StatusRuntimeException thrown) {
+            publish(() -> "RPC failed: " + thrown.getStatus(), b -> b.thrown(thrown));
+        }
+        return null;
     }
     
-    ServerImpl(Server.Config config, Repository repository, boolean openRepository) {
+    ClientImpl(Config config, Repository repository, boolean openRepository) {
         this.config = configCheck(config);
         final Repository validRepository = nullCheck(repository, "Repository must be present.");
         this.closeRepository = openRepository ? validRepository.open() : AutoClose.NONE;
@@ -50,42 +54,37 @@ final class ServerImpl implements Server {
     }
     
     private AutoClose realOpen() {
-        try {
-            grpcServer = Grpc.newServerBuilderForPort(config.port(), InsecureServerCredentials.create())
-                .addService(new WeatherServiceImpl())
-                .addService(ProtoReflectionServiceV1.newInstance())
-                .addService(health.getHealthService())
-                .build()
-                .start();
-            health.setStatus("", HealthCheckResponse.ServingStatus.SERVING);
-        } catch (IOException e) {
-            throw new ServerException("Failed to start server.", e);
-        }
+        final String target = config.hostname() + ":" + config.port();
+        channel = Grpc.newChannelBuilder(target, InsecureChannelCredentials.create())
+            .build();
+
+        blockingStub = WeatherGrpc.newBlockingStub(channel);
         
         return this::exposedClose;
     }
-    
+
     private void exposedClose() {
         withClose(stateMachine, this::realClose);
     }
     
     private void realClose() {
-        ofNullable(grpcServer).ifPresent(x -> {
-            x.shutdown();
+        ofNullable(channel).ifPresent(c -> {
+            c.shutdown();
             try {
-                x.awaitTermination(config.shutdownTimeout().toMillis(), TimeUnit.MILLISECONDS);
+                c.awaitTermination(config.shutdownTimeout().toMillis(), TimeUnit.MILLISECONDS);
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
-            x.shutdownNow();
         });
         closeRepository.close();
     }
     
-    private final Server.Config config;
+    private final Config config;
     private final AutoClose closeRepository;
     private final StateMachine<Idempotent> stateMachine;
     
     private final HealthStatusManager health = new HealthStatusManager();
-    private io.grpc.Server grpcServer;
+
+    private ManagedChannel channel;
+    private WeatherGrpc.WeatherBlockingStub blockingStub;
 }

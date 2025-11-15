@@ -12,6 +12,11 @@ import java.util.List;
 public final class Constants {
     
     /**
+     * Example of a simple contract
+     */
+    public static Contract<String> WEATHER = Contract.create("Current Weather");
+    
+    /**
      *   Constant string, but open for uses cases like localization.
      */
     public static final Contract<String> PROGRAM_NAME = Contract.create("Program name contract");
@@ -20,7 +25,6 @@ public final class Constants {
      * The main program implementation, not everything has to be in the class with main()
      */
     public static final Contract<Program> PROGRAM = Contract.create("Program contract");
-    
     
     /**
      * Main arguments

@@ -1,4 +1,6 @@
 rootProject.name = 'examples'
+include 'messages'
 include 'common'
-
 include 'server'
+
+include 'client'

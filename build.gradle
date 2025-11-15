@@ -47,8 +47,10 @@ repositories {
 }
 
 dependencies {
+    implementation project(":messages")
     implementation project(":common")
     implementation project(":server")
+    implementation project(":client")
 
     implementation libs.contracts
     implementation libs.concurrency

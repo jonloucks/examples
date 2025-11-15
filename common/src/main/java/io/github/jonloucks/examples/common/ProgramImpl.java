@@ -35,7 +35,9 @@ final class ProgramImpl implements Program, AutoOpen {
         if (arguments.isEmpty()) {
             runCommand("help", emptyList(), onCompletion);
         } else {
-            runCommand(arguments.get(0), arguments.subList(1, arguments.size()), onCompletion);
+            for (String argument : arguments) {
+                runCommand(argument, emptyList(), onCompletion);
+            }
         }
     }
     

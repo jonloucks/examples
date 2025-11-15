@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package io.github.jonloucks.examples.messages.weather;
+
+// The weather service definition.
+service Weather {
+  // Sends a weather
+  rpc SayWeather (WeatherRequest) returns (WeatherReply);
+}
+
+message WeatherRequest {
+  string id = 1;
+  repeated string location = 2;
+}
+
+message WeatherReply {
+  string id = 1;
+  string location = 2;
+  string report = 4;
+}

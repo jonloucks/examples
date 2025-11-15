@@ -32,6 +32,8 @@ public final class Common {
         
         final BindStrategy strategy = IF_ALLOWED;
         
+        repository.keep(WEATHER, () -> "Weather report unavailable.");
+        
         // Constant string, but could be changed to a localized value without changing uses
         repository.keep(PROGRAM_NAME, () -> "Unnamed", strategy);
         

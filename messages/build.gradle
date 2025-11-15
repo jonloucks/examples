@@ -1,0 +1,43 @@
+plugins {
+    id 'java-library'
+    id "com.google.protobuf" version libs.versions.protobuf.plugin.version
+}
+
+getTasks().withType(JavaCompile.class).configureEach {
+    getOptions().getRelease().set(9)
+}
+
+protobuf {
+    protoc {
+        artifact = libs.protoc.get()
+    }
+    plugins {
+        grpc {
+            artifact = libs.grpc.protoc.get()
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation libs.grpc.protobuf
+    implementation libs.grpc.stub
+    implementation libs.grpc.services
+    runtimeOnly libs.grpc.netty.shaded
+
+    testImplementation libs.grpc.testing
+    testImplementation libs.grpc.inprocess
+}
+
+test {
+    useJUnitPlatform()
+}

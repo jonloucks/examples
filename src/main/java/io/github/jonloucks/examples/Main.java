@@ -2,6 +2,9 @@ package io.github.jonloucks.examples;
 
 import io.github.jonloucks.contracts.api.AutoClose;
 import io.github.jonloucks.contracts.api.Repository;
+import io.github.jonloucks.example.client.Client;
+import io.github.jonloucks.example.client.ClientFactory;
+import io.github.jonloucks.example.client.ClientFactoryFinder;
 import io.github.jonloucks.example.server.Server;
 import io.github.jonloucks.example.server.ServerFactory;
 import io.github.jonloucks.example.server.ServerFactoryFinder;
@@ -9,6 +12,7 @@ import io.github.jonloucks.examples.common.Common;
 import io.github.jonloucks.examples.common.Program;
 
 import java.util.Arrays;
+import java.util.function.IntConsumer;
 
 import static io.github.jonloucks.contracts.api.BindStrategy.ALWAYS;
 import static io.github.jonloucks.contracts.api.GlobalContracts.claimContract;
@@ -18,6 +22,17 @@ import static io.github.jonloucks.examples.common.Constants.*;
 public final class Main {
     
     /**
+     * For testing the smoke application
+     * @param consumer for the exit code
+     * @return the previous system exit method
+     */
+    public static IntConsumer setSystemExit(IntConsumer consumer) {
+        final IntConsumer save = SYSTEM_EXIT;
+        SYSTEM_EXIT = consumer;
+        return save;
+    }
+    
+    /**
      * Main entry point.
      * Note. Entry points are where final decisions on dependency inversions are made.
      * Not all decisions must be made in an entry point, but in this example it is exposed
@@ -25,21 +40,28 @@ public final class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        try {
+            innerMain(args);
+            SYSTEM_EXIT.accept(0);
+        } catch (Exception thrown) {
+            System.err.println(thrown.getMessage());
+            SYSTEM_EXIT.accept(1);
+        }
+    }
+    
+    private static void innerMain(String[] args) {
         final Repository repository = createMyRepository(args);
         try (AutoClose closeRepository = repository.open()) {
             final Program program = claimContract(PROGRAM);
             installCommand(program);
-            program.runCommandLine( c -> {});
+            program.runCommandLine(c -> {});
             waitForQuitting();
-            System.exit(0);
-        } catch (Exception thrown) {
-            System.err.println(thrown.getMessage());
-            System.exit(1);
         }
     }
     
     private static void installCommand(Program program) {
         program.keepCommand(new ServerCommand());
+        program.keepCommand(new ClientCommand());
     }
     
     /**
@@ -60,6 +82,7 @@ public final class Main {
         Common.install(repository);
         
         installServer(repository);
+        installClient(repository);
         
         // Save the command line for later use
         repository.keep(PROGRAM_ARGUMENTS, () -> Arrays.asList(args), ALWAYS);
@@ -76,7 +99,15 @@ public final class Main {
         serverFactory.install(Server.Config.DEFAULT, repository);
     }
     
+    private static void installClient(Repository repository) {
+        final ClientFactoryFinder finder = new ClientFactoryFinder(Client.Config.DEFAULT);
+        final ClientFactory serverFactory = finder.get();
+        serverFactory.install(Client.Config.DEFAULT, repository);
+    }
+    
     private Main() {
     
     }
+    
+    private static IntConsumer SYSTEM_EXIT = System::exit;
 }

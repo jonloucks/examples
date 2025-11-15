@@ -1,4 +1,4 @@
-package io.github.jonloucks.example.server;
+package io.github.jonloucks.example.client;
 
 import io.github.jonloucks.concurrency.api.Idempotent;
 import io.github.jonloucks.concurrency.api.WaitableNotify;
@@ -10,18 +10,16 @@ import io.github.jonloucks.contracts.api.GlobalContracts;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-public interface Server extends AutoOpen {
-    Contract<Server> CONTRACT = Contract.create(Server.class);
+public interface Client extends AutoOpen {
+    Contract<Client> CONTRACT = Contract.create(Client.class);
     
     WaitableNotify<Idempotent> lifeCycleNotify();
-    
-    Idempotent getLifeCycleState();
     
     String getWeatherReport();
     
     interface Config {
         /**
-         * The default configuration used when creating a new Server instance
+         * The default configuration used when creating a new Client instance
          */
         Config DEFAULT = new Config() {};
         
@@ -33,35 +31,39 @@ public interface Server extends AutoOpen {
         }
         
         /**
-         * @return if true, reflection might be used to locate the ServerFactory
+         * @return if true, reflection might be used to locate the ClientFactory
          */
         default boolean useReflection() {
             return true;
         }
         
         /**
-         * @return the class name to use if reflection is used to find the ServerFactory
+         * @return the class name to use if reflection is used to find the ClientFactory
          */
         default String reflectionClassName() {
-            return "io.github.jonloucks.example.server.ServerFactoryImpl";
+            return "io.github.jonloucks.example.client.ClientFactoryImpl";
         }
         
         /**
-         * @return if true, the ServiceLoader might be used to locate the ServerFactory
+         * @return if true, the ServiceLoader might be used to locate the ClientFactory
          */
         default boolean useServiceLoader() {
             return true;
         }
         
         /**
-         * @return the class name to load from the ServiceLoader to find the ServerFactory
+         * @return the class name to load from the ServiceLoader to find the ClientFactory
          */
-        default Class<? extends ServerFactory> serviceLoaderClass() {
-            return ServerFactory.class;
+        default Class<? extends ClientFactory> serviceLoaderClass() {
+            return ClientFactory.class;
         }
         
         default int port() {
             return 50052;
+        }
+        
+        default String hostname() {
+            return "localhost";
         }
         
         default Duration shutdownTimeout() {
@@ -69,11 +71,13 @@ public interface Server extends AutoOpen {
         }
         
         interface Builder extends Config {
-            Contract<Supplier<Config.Builder>> FACTORY = Contract.create("Server Config Builder Factory");
+            Contract<Supplier<Builder>> FACTORY = Contract.create("Client Config Builder Factory");
             
             Builder contracts(Contracts contracts);
             
             Builder port(int port);
+            
+            Builder hostname(String hostname);
             
             Builder shutdownTimeout(Duration shutdownTimeout);
         }

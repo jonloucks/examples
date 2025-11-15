@@ -1,4 +1,4 @@
-package io.github.jonloucks.example.server;
+package io.github.jonloucks.example.client;
 
 import io.github.jonloucks.contracts.api.Contracts;
 
@@ -7,11 +7,16 @@ import java.time.Duration;
 import static io.github.jonloucks.contracts.api.Checks.contractsCheck;
 import static io.github.jonloucks.contracts.api.Checks.nullCheck;
 
-final class ConfigBuilderImpl implements Server.Config.Builder {
+final class ConfigBuilderImpl implements Client.Config.Builder {
     
     @Override
     public Contracts contracts() {
         return contracts;
+    }
+    
+    @Override
+    public String hostname() {
+        return hostname;
     }
     
     @Override
@@ -37,16 +42,22 @@ final class ConfigBuilderImpl implements Server.Config.Builder {
     }
     
     @Override
+    public Builder hostname(String hostname) {
+        this.hostname = nullCheck(hostname, "Hostname must be present.");
+        return this;
+    }
+    
+    @Override
     public Builder shutdownTimeout(Duration timeout) {
         this.shutdownTimeout = nullCheck(timeout, "Timeout must be present.");
         return this;
     }
     
     ConfigBuilderImpl() {
-    
     }
     
     private Contracts contracts;
-    private int port = Server.Config.DEFAULT.port();
-    private Duration shutdownTimeout = Server.Config.DEFAULT.shutdownTimeout();
+    private String hostname = Client.Config.DEFAULT.hostname();
+    private int port = Client.Config.DEFAULT.port();
+    private Duration shutdownTimeout = Client.Config.DEFAULT.shutdownTimeout();
 }
